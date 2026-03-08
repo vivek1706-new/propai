@@ -1,43 +1,306 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="A stunning modern Hello World webpage." />
-  <title>Hello World</title>
+  <title>NestFinder – India's #1 Property Search Platform</title>
+  <meta name="description"
+    content="Search flats, villas, plots and commercial properties for sale and rent across India. Explore thousands of verified listings on NestFinder." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
-  <div class="bg-orbs">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
-  </div>
 
-  <main class="hero">
-    <div class="card">
-      <span class="badge">✦ Welcome</span>
-      <h1 class="title">
-        Hello, <span class="gradient-text">World</span>
-        <span class="wave" role="img" aria-label="waving hand">👋</span>
-      </h1>
-      <p class="subtitle">
-        A beautifully crafted starting point for something extraordinary.
-      </p>
-      <div class="divider"></div>
-      <div class="stack-info">
-        <span class="tag">HTML</span>
-        <span class="tag">CSS</span>
-        <span class="tag">Modern Design</span>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar" id="main-navbar">
+    <div class="nav-container">
+      <a href="index.html" class="logo">
+        <span class="logo-icon">🏠</span>
+        <span class="logo-text">Nest<span class="logo-accent">Finder</span></span>
+      </a>
+      <div class="nav-links">
+        <a href="listings.html?type=buy" class="nav-link">Buy</a>
+        <a href="listings.html?type=rent" class="nav-link">Rent</a>
+        <a href="#" class="nav-link">Projects</a>
+        <a href="#" class="nav-link">Commercial</a>
+        <a href="#" class="nav-link">Home Loans</a>
+      </div>
+      <div class="nav-actions">
+        <a href="#" class="btn-outline-sm">Post Free Ad</a>
+        <a href="#" class="btn-primary-sm">Sign In</a>
       </div>
     </div>
-  </main>
+  </nav>
 
+  <!-- HERO SECTION -->
+  <section class="hero">
+    <div class="hero-bg"
+      style="background-image: url('.gemini/antigravity/brain/d9b59bea-ac4f-4bc8-98da-222ca9f606df/hero_cityscape_1772905265504.png');">
+    </div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <p class="hero-tagline">India's Most Trusted Property Platform</p>
+      <h1 class="hero-title">Find Your Perfect <span class="hero-accent">Dream Home</span></h1>
+      <p class="hero-subtitle">Over 1,20,000+ verified listings across 30+ cities</p>
+
+      <!-- Search Card -->
+      <div class="search-card">
+        <div class="search-tabs">
+          <button class="search-tab active" data-type="buy" onclick="setSearchType('buy', this)">Buy</button>
+          <button class="search-tab" data-type="rent" onclick="setSearchType('rent', this)">Rent</button>
+          <button class="search-tab" data-type="commercial"
+            onclick="setSearchType('commercial', this)">Commercial</button>
+        </div>
+        <div class="search-bar">
+          <div class="search-field">
+            <label class="search-label">City</label>
+            <select id="city-select" class="search-input">
+              <option value="">All Cities</option>
+              <option value="Mumbai">Mumbai</option>
+              <option value="Delhi">Delhi</option>
+              <option value="Bengaluru">Bengaluru</option>
+              <option value="Hyderabad">Hyderabad</option>
+              <option value="Pune">Pune</option>
+              <option value="Chennai">Chennai</option>
+              <option value="Kolkata">Kolkata</option>
+            </select>
+          </div>
+          <div class="search-divider"></div>
+          <div class="search-field">
+            <label class="search-label">Property Type</label>
+            <select id="property-type-select" class="search-input">
+              <option value="">All Types</option>
+              <option value="Flat">Flat / Apartment</option>
+              <option value="Villa">Villa / House</option>
+              <option value="Plot">Plot / Land</option>
+              <option value="PG">PG / Hostel</option>
+            </select>
+          </div>
+          <div class="search-divider"></div>
+          <div class="search-field">
+            <label class="search-label">BHK</label>
+            <select id="bhk-select" class="search-input">
+              <option value="">Any BHK</option>
+              <option value="1">1 BHK</option>
+              <option value="2">2 BHK</option>
+              <option value="3">3 BHK</option>
+              <option value="4">4+ BHK</option>
+            </select>
+          </div>
+          <button class="search-btn" onclick="doSearch()">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            Search
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick stats -->
+      <div class="hero-stats">
+        <div class="hero-stat"><span class="stat-num">1.2L+</span><span class="stat-label">Active Listings</span></div>
+        <div class="stat-dot"></div>
+        <div class="hero-stat"><span class="stat-num">30+</span><span class="stat-label">Cities Covered</span></div>
+        <div class="stat-dot"></div>
+        <div class="hero-stat"><span class="stat-num">98%</span><span class="stat-label">Verified Properties</span>
+        </div>
+        <div class="stat-dot"></div>
+        <div class="hero-stat"><span class="stat-num">50K+</span><span class="stat-label">Happy Customers</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURED PROPERTIES -->
+  <section class="section" id="featured">
+    <div class="section-container">
+      <div class="section-header">
+        <div>
+          <p class="section-eyebrow">Handpicked For You</p>
+          <h2 class="section-title">Featured Properties</h2>
+        </div>
+        <a href="listings.html" class="view-all-btn">View All <span>→</span></a>
+      </div>
+      <div class="cards-grid" id="featured-grid">
+        <!-- Injected by app.js -->
+      </div>
+    </div>
+  </section>
+
+  <!-- POPULAR LOCALITIES -->
+  <section class="section section-dark" id="localities">
+    <div class="section-container">
+      <div class="section-header">
+        <div>
+          <p class="section-eyebrow">Trending Now</p>
+          <h2 class="section-title">Popular Localities</h2>
+        </div>
+      </div>
+      <div class="locality-grid">
+        <a href="listings.html?locality=Bandra" class="locality-card">
+          <div class="locality-bg" style="background:linear-gradient(135deg,#1a1a2e,#16213e)"></div>
+          <div class="locality-info">
+            <h3>Bandra</h3>
+            <p>Mumbai · 342 listings</p>
+          </div>
+        </a>
+        <a href="listings.html?locality=Powai" class="locality-card">
+          <div class="locality-bg" style="background:linear-gradient(135deg,#0f3460,#533483)"></div>
+          <div class="locality-info">
+            <h3>Powai</h3>
+            <p>Mumbai · 218 listings</p>
+          </div>
+        </a>
+        <a href="listings.html?locality=Whitefield" class="locality-card">
+          <div class="locality-bg" style="background:linear-gradient(135deg,#1b4332,#40916c)"></div>
+          <div class="locality-info">
+            <h3>Whitefield</h3>
+            <p>Bengaluru · 510 listings</p>
+          </div>
+        </a>
+        <a href="listings.html?locality=Koramangala" class="locality-card">
+          <div class="locality-bg" style="background:linear-gradient(135deg,#7b2d8b,#c77dff)"></div>
+          <div class="locality-info">
+            <h3>Koramangala</h3>
+            <p>Bengaluru · 289 listings</p>
+          </div>
+        </a>
+        <a href="listings.html?locality=Gurgaon" class="locality-card">
+          <div class="locality-bg" style="background:linear-gradient(135deg,#7c3f00,#d08000)"></div>
+          <div class="locality-info">
+            <h3>Gurgaon</h3>
+            <p>Delhi NCR · 673 listings</p>
+          </div>
+        </a>
+        <a href="listings.html?locality=Hitech+City" class="locality-card">
+          <div class="locality-bg" style="background:linear-gradient(135deg,#003049,#fcbf49)"></div>
+          <div class="locality-info">
+            <h3>Hitech City</h3>
+            <p>Hyderabad · 411 listings</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY NESTFINDER -->
+  <section class="section section-features">
+    <div class="section-container">
+      <div class="section-header center">
+        <div>
+          <p class="section-eyebrow">Why NestFinder?</p>
+          <h2 class="section-title">The Smart Way to Find Property</h2>
+        </div>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🔍</div>
+          <h3>Smart Search</h3>
+          <p>Advanced filters to find your perfect match in seconds — locality, budget, BHK, and more.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">✅</div>
+          <h3>Verified Listings</h3>
+          <p>98% of listings are verified by our team. No fake listings, no spam calls.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">💬</div>
+          <h3>Connect Instantly</h3>
+          <p>Chat directly with owners or agents. No middlemen, no extra charges.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3>Price Insights</h3>
+          <p>Get real market price trends and neighborhood reports before you decide.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
   <footer class="footer">
-    <p>Crafted with <span class="heart">♥</span> and pure CSS</p>
+    <div class="footer-container">
+      <div class="footer-brand">
+        <div class="logo"><span class="logo-icon">🏠</span><span class="logo-text">Nest<span
+              class="logo-accent">Finder</span></span></div>
+        <p>India's most trusted platform for buying, selling, and renting properties.</p>
+        <div class="social-links">
+          <a href="#" class="social-link">𝕏</a>
+          <a href="#" class="social-link">in</a>
+          <a href="#" class="social-link">f</a>
+          <a href="#" class="social-link">📸</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Buy Property</h4>
+        <a href="#">Flats in Mumbai</a>
+        <a href="#">Villas in Bengaluru</a>
+        <a href="#">Plots in Hyderabad</a>
+        <a href="#">New Projects</a>
+      </div>
+      <div class="footer-col">
+        <h4>Rent Property</h4>
+        <a href="#">Apartments</a>
+        <a href="#">PG / Hostel</a>
+        <a href="#">Commercial</a>
+        <a href="#">Co-living</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="#">About Us</a>
+        <a href="#">Careers</a>
+        <a href="#">Blog</a>
+        <a href="#">Contact</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 NestFinder. All rights reserved.</p>
+      <div class="footer-legal">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Use</a>
+        <a href="#">Cookie Policy</a>
+      </div>
+    </div>
   </footer>
+
+  <script src="app.js"></script>
+  <script>
+    // Navbar scroll effect
+    window.addEventListener('scroll', () => {
+      const nav = document.getElementById('main-navbar');
+      if (window.scrollY > 60) nav.classList.add('scrolled');
+      else nav.classList.remove('scrolled');
+    });
+
+    let currentType = 'buy';
+    function setSearchType(type, btn) {
+      currentType = type;
+      document.querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function doSearch() {
+      const city = document.getElementById('city-select').value;
+      const type = document.getElementById('property-type-select').value;
+      const bhk = document.getElementById('bhk-select').value;
+      let url = `listings.html?listingType=${currentType}`;
+      if (city) url += `&city=${encodeURIComponent(city)}`;
+      if (type) url += `&propertyType=${encodeURIComponent(type)}`;
+      if (bhk) url += `&bhk=${encodeURIComponent(bhk)}`;
+      window.location.href = url;
+    }
+
+    // Render featured properties
+    document.addEventListener('DOMContentLoaded', () => {
+      const featured = properties.slice(0, 6);
+      document.getElementById('featured-grid').innerHTML = featured.map(p => buildCard(p)).join('');
+    });
+  </script>
 </body>
+
 </html>

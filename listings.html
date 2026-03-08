@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Property Listings – NestFinder</title>
+    <meta name="description"
+        content="Browse verified property listings for sale and rent across India. Filter by budget, BHK, locality, and more." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body class="listings-page">
+
+    <!-- NAVBAR -->
+    <nav class="navbar scrolled" id="main-navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">🏠</span>
+                <span class="logo-text">Nest<span class="logo-accent">Finder</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="listings.html?type=buy" class="nav-link">Buy</a>
+                <a href="listings.html?type=rent" class="nav-link">Rent</a>
+                <a href="#" class="nav-link">Projects</a>
+                <a href="#" class="nav-link">Commercial</a>
+                <a href="#" class="nav-link">Home Loans</a>
+            </div>
+            <div class="nav-actions">
+                <a href="#" class="btn-outline-sm">Post Free Ad</a>
+                <a href="#" class="btn-primary-sm">Sign In</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- LISTINGS LAYOUT -->
+    <div class="listings-layout">
+
+        <!-- SIDEBAR FILTERS -->
+        <aside class="filter-sidebar" id="filter-sidebar">
+            <div class="filter-header">
+                <h2>Filters</h2>
+                <button class="clear-all-btn" onclick="clearAllFilters()">Clear All</button>
+            </div>
+
+            <!-- Listing Type -->
+            <div class="filter-section">
+                <h3 class="filter-title">Looking For</h3>
+                <div class="pill-group" id="filter-listing-type">
+                    <button class="pill active" data-val="all" onclick="setPill(this,'listing-type')">All</button>
+                    <button class="pill" data-val="buy" onclick="setPill(this,'listing-type')">Buy</button>
+                    <button class="pill" data-val="rent" onclick="setPill(this,'listing-type')">Rent</button>
+                </div>
+            </div>
+
+            <!-- BHK Filter -->
+            <div class="filter-section">
+                <h3 class="filter-title">BHK Type</h3>
+                <div class="pill-group" id="filter-bhk">
+                    <button class="pill active" data-val="all" onclick="setPill(this,'bhk')">Any</button>
+                    <button class="pill" data-val="1" onclick="setPill(this,'bhk')">1 BHK</button>
+                    <button class="pill" data-val="2" onclick="setPill(this,'bhk')">2 BHK</button>
+                    <button class="pill" data-val="3" onclick="setPill(this,'bhk')">3 BHK</button>
+                    <button class="pill" data-val="4" onclick="setPill(this,'bhk')">4+ BHK</button>
+                </div>
+            </div>
+
+            <!-- Budget Range -->
+            <div class="filter-section">
+                <h3 class="filter-title">Budget</h3>
+                <div class="budget-display">
+                    <span id="budget-min-label">₹10L</span>
+                    <span>–</span>
+                    <span id="budget-max-label">₹10Cr+</span>
+                </div>
+                <div class="range-track">
+                    <input type="range" id="budget-min" min="10" max="10000" value="10" step="10" class="range-slider"
+                        oninput="updateBudget()">
+                    <input type="range" id="budget-max" min="10" max="10000" value="10000" step="10"
+                        class="range-slider" oninput="updateBudget()">
+                </div>
+                <div class="budget-presets">
+                    <button class="preset-btn" onclick="setBudgetPreset(10,5000)">Under 5Cr</button>
+                    <button class="preset-btn" onclick="setBudgetPreset(10,1000)">Under 1Cr</button>
+                    <button class="preset-btn" onclick="setBudgetPreset(10,500)">Under 50L</button>
+                    <button class="preset-btn" onclick="setBudgetPreset(10,250)">Under 25L</button>
+                </div>
+            </div>
+
+            <!-- Property Type -->
+            <div class="filter-section">
+                <h3 class="filter-title">Property Type</h3>
+                <div class="pill-group" id="filter-property-type">
+                    <button class="pill active" data-val="all" onclick="setPill(this,'property-type')">All</button>
+                    <button class="pill" data-val="Flat" onclick="setPill(this,'property-type')">Flat</button>
+                    <button class="pill" data-val="Villa" onclick="setPill(this,'property-type')">Villa</button>
+                    <button class="pill" data-val="Plot" onclick="setPill(this,'property-type')">Plot</button>
+                </div>
+            </div>
+
+            <!-- Locality -->
+            <div class="filter-section">
+                <h3 class="filter-title">Locality</h3>
+                <div class="locality-filter" id="filter-locality">
+                    <label class="checkbox-item"><input type="checkbox" value="Bandra" onchange="applyFilters()">
+                        <span>Bandra, Mumbai</span></label>
+                    <label class="checkbox-item"><input type="checkbox" value="Powai" onchange="applyFilters()">
+                        <span>Powai, Mumbai</span></label>
+                    <label class="checkbox-item"><input type="checkbox" value="Whitefield" onchange="applyFilters()">
+                        <span>Whitefield, Bengaluru</span></label>
+                    <label class="checkbox-item"><input type="checkbox" value="Koramangala" onchange="applyFilters()">
+                        <span>Koramangala, Bengaluru</span></label>
+                    <label class="checkbox-item"><input type="checkbox" value="Gurgaon" onchange="applyFilters()">
+                        <span>Gurgaon, Delhi NCR</span></label>
+                    <label class="checkbox-item"><input type="checkbox" value="Hitech City" onchange="applyFilters()">
+                        <span>Hitech City, Hyderabad</span></label>
+                    <label class="checkbox-item"><input type="checkbox" value="Andheri" onchange="applyFilters()">
+                        <span>Andheri, Mumbai</span></label>
+                    <label class="checkbox-item"><input type="checkbox" value="Indiranagar" onchange="applyFilters()">
+                        <span>Indiranagar, Bengaluru</span></label>
+                </div>
+            </div>
+
+            <!-- Furnishing -->
+            <div class="filter-section">
+                <h3 class="filter-title">Furnishing</h3>
+                <div class="pill-group" id="filter-furnishing">
+                    <button class="pill active" data-val="all" onclick="setPill(this,'furnishing')">All</button>
+                    <button class="pill" data-val="Furnished" onclick="setPill(this,'furnishing')">Furnished</button>
+                    <button class="pill" data-val="Semi-Furnished" onclick="setPill(this,'furnishing')">Semi</button>
+                    <button class="pill" data-val="Unfurnished"
+                        onclick="setPill(this,'furnishing')">Unfurnished</button>
+                </div>
+            </div>
+
+            <!-- Availability -->
+            <div class="filter-section">
+                <h3 class="filter-title">Availability</h3>
+                <div class="pill-group" id="filter-availability">
+                    <button class="pill active" data-val="all" onclick="setPill(this,'availability')">All</button>
+                    <button class="pill" data-val="Ready to Move" onclick="setPill(this,'availability')">Ready to
+                        Move</button>
+                    <button class="pill" data-val="Under Construction" onclick="setPill(this,'availability')">Under
+                        Construction</button>
+                </div>
+            </div>
+
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="listings-main">
+            <!-- Sort Bar -->
+            <div class="sort-bar">
+                <div class="results-info">
+                    <span id="results-count">0</span> properties found
+                </div>
+                <div class="sort-controls">
+                    <span class="sort-label">Sort by:</span>
+                    <select id="sort-select" class="sort-select" onchange="applyFilters()">
+                        <option value="featured">Featured</option>
+                        <option value="price-asc">Price: Low to High</option>
+                        <option value="price-desc">Price: High to Low</option>
+                        <option value="newest">Newest First</option>
+                        <option value="area-desc">Area: Largest First</option>
+                    </select>
+                </div>
+                <button class="filter-toggle-btn" id="filter-toggle" onclick="toggleFilterSidebar()">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <line x1="4" x2="20" y1="6" y2="6" />
+                        <line x1="4" x2="20" y1="12" y2="12" />
+                        <line x1="4" x2="20" y1="18" y2="18" />
+                    </svg>
+                    Filters
+                </button>
+            </div>
+
+            <!-- Active Filter Tags -->
+            <div class="active-filters" id="active-filters"></div>
+
+            <!-- Listings Grid -->
+            <div class="cards-grid" id="listings-grid">
+                <!-- Injected by JS -->
+            </div>
+
+            <!-- Empty state -->
+            <div class="empty-state" id="empty-state" style="display:none">
+                <div class="empty-icon">🔍</div>
+                <h3>No properties found</h3>
+                <p>Try adjusting your filters to see more results.</p>
+                <button class="btn-primary-sm" onclick="clearAllFilters()">Clear Filters</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <div class="logo"><span class="logo-icon">🏠</span><span class="logo-text">Nest<span
+                            class="logo-accent">Finder</span></span></div>
+                <p>India's most trusted platform.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Quick Links</h4>
+                <a href="index.html">Home</a>
+                <a href="listings.html">All Listings</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 NestFinder. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        // Pill selection
+        const pillState = { 'listing-type': 'all', 'bhk': 'all', 'property-type': 'all', 'furnishing': 'all', 'availability': 'all' };
+        function setPill(btn, group) {
+            document.querySelectorAll(`#filter-${group} .pill`).forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            pillState[group] = btn.getAttribute('data-val');
+            applyFilters();
+        }
+
+        // Budget
+        function formatLakhs(val) {
+            if (val >= 10000) return '10Cr+';
+            if (val >= 100) return `${(val / 100).toFixed(val % 100 === 0 ? 0 : 1)}Cr`;
+            return `₹${val}L`;
+        }
+        function updateBudget() {
+            let min = parseInt(document.getElementById('budget-min').value);
+            let max = parseInt(document.getElementById('budget-max').value);
+            if (min > max) { const t = min; min = max; max = t; }
+            document.getElementById('budget-min-label').textContent = formatLakhs(min);
+            document.getElementById('budget-max-label').textContent = formatLakhs(max);
+            applyFilters();
+        }
+        function setBudgetPreset(min, max) {
+            document.getElementById('budget-min').value = min;
+            document.getElementById('budget-max').value = max;
+            updateBudget();
+        }
+
+        function clearAllFilters() {
+            ['listing-type', 'bhk', 'property-type', 'furnishing', 'availability'].forEach(g => {
+                const first = document.querySelector(`#filter-${g} .pill[data-val="all"]`) || document.querySelector(`#filter-${g} .pill`);
+                if (first) { document.querySelectorAll(`#filter-${g} .pill`).forEach(p => p.classList.remove('active')); first.classList.add('active'); pillState[g] = first.getAttribute('data-val'); }
+            });
+            document.querySelectorAll('#filter-locality input[type=checkbox]').forEach(cb => cb.checked = false);
+            document.getElementById('budget-min').value = 10;
+            document.getElementById('budget-max').value = 10000;
+            updateBudget();
+            document.getElementById('sort-select').value = 'featured';
+            applyFilters();
+        }
+
+        function toggleFilterSidebar() {
+            document.getElementById('filter-sidebar').classList.toggle('open');
+        }
+
+        // Apply all filters
+        function applyFilters() {
+            let results = [...properties];
+            const lt = pillState['listing-type'];
+            const bhk = pillState['bhk'];
+            const pt = pillState['property-type'];
+            const furn = pillState['furnishing'];
+            const avail = pillState['availability'];
+            const minB = parseInt(document.getElementById('budget-min').value);
+            const maxB = parseInt(document.getElementById('budget-max').value) >= 10000 ? Infinity : parseInt(document.getElementById('budget-max').value) * 100000;
+            const minBv = minB * 100000;
+            const localities = Array.from(document.querySelectorAll('#filter-locality input:checked')).map(c => c.value);
+            const sort = document.getElementById('sort-select').value;
+
+            if (lt !== 'all') results = results.filter(p => p.listingType === lt);
+            if (bhk !== 'all') results = results.filter(p => bhk === '4' ? p.bhk >= 4 : p.bhk === parseInt(bhk));
+            if (pt !== 'all') results = results.filter(p => p.propertyType === pt);
+            if (furn !== 'all') results = results.filter(p => p.furnishing === furn);
+            if (avail !== 'all') results = results.filter(p => p.availability === avail);
+            results = results.filter(p => p.price >= minBv && p.price <= maxB);
+            if (localities.length > 0) results = results.filter(p => localities.includes(p.locality));
+
+            if (sort === 'price-asc') results.sort((a, b) => a.price - b.price);
+            if (sort === 'price-desc') results.sort((a, b) => b.price - a.price);
+            if (sort === 'newest') results.sort((a, b) => b.id - a.id);
+            if (sort === 'area-desc') results.sort((a, b) => b.area - a.area);
+
+            const grid = document.getElementById('listings-grid');
+            const empty = document.getElementById('empty-state');
+            const count = document.getElementById('results-count');
+            count.textContent = results.length;
+
+            if (results.length === 0) { grid.innerHTML = ''; empty.style.display = 'flex'; }
+            else { empty.style.display = 'none'; grid.innerHTML = results.map(p => buildCard(p)).join(''); }
+
+            renderActiveTags();
+        }
+
+        function renderActiveTags() {
+            const tags = [];
+            if (pillState['listing-type'] !== 'all') tags.push({ label: pillState['listing-type'].charAt(0).toUpperCase() + pillState['listing-type'].slice(1), group: 'listing-type' });
+            if (pillState['bhk'] !== 'all') tags.push({ label: pillState['bhk'] === '4' ? '4+ BHK' : pillState['bhk'] + ' BHK', group: 'bhk' });
+            if (pillState['property-type'] !== 'all') tags.push({ label: pillState['property-type'], group: 'property-type' });
+            if (pillState['furnishing'] !== 'all') tags.push({ label: pillState['furnishing'], group: 'furnishing' });
+            if (pillState['availability'] !== 'all') tags.push({ label: pillState['availability'], group: 'availability' });
+            document.querySelectorAll('#filter-locality input:checked').forEach(cb => tags.push({ label: cb.value, group: 'locality', val: cb.value }));
+            document.getElementById('active-filters').innerHTML = tags.map(t => `<span class="active-tag">${t.label} <button onclick="removeTag('${t.group}','${t.val || ''}')" aria-label="Remove filter">×</button></span>`).join('');
+        }
+
+        function removeTag(group, val) {
+            if (group === 'locality') {
+                const cb = document.querySelector(`#filter-locality input[value="${val}"]`);
+                if (cb) { cb.checked = false; applyFilters(); }
+            } else {
+                const first = document.querySelector(`#filter-${group} .pill[data-val="all"]`);
+                if (first) setPill(first, group);
+            }
+        }
+
+        // Init on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('listingType')) {
+                const btn = document.querySelector(`#filter-listing-type .pill[data-val="${params.get('listingType')}"]`);
+                if (btn) setPill(btn, 'listing-type');
+            }
+            if (params.get('bhk')) {
+                const btn = document.querySelector(`#filter-bhk .pill[data-val="${params.get('bhk')}"]`);
+                if (btn) setPill(btn, 'bhk');
+            }
+            if (params.get('propertyType')) {
+                const btn = document.querySelector(`#filter-property-type .pill[data-val="${params.get('propertyType')}"]`);
+                if (btn) setPill(btn, 'property-type');
+            }
+            if (params.get('locality')) {
+                const cb = document.querySelector(`#filter-locality input[value="${params.get('locality')}"]`);
+                if (cb) { cb.checked = true; }
+            }
+            updateBudget();
+            applyFilters();
+        });
+    </script>
+</body>
+
+</html>
