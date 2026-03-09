@@ -1,43 +1,18 @@
 {
     "version": 2,
-    "builds": [
+    "rewrites": [
         {
-            "src": "api/**/*.js",
-            "use": "@vercel/node"
+            "source": "/api/(.*)",
+            "destination": "/api/$1"
         },
         {
-            "src": "*.html",
-            "use": "@vercel/static"
+            "source": "/src/(.*)",
+            "destination": "/$1"
         },
         {
-            "src": "*.css",
-            "use": "@vercel/static"
-        },
-        {
-            "src": "*.js",
-            "use": "@vercel/static"
+            "source": "/",
+            "destination": "/index.html"
         }
     ],
-    "routes": [
-        {
-            "src": "/api/(.*)",
-            "dest": "/api/$1"
-        },
-        {
-            "src": "/",
-            "dest": "/index.html"
-        },
-        {
-            "src": "/(index|listings|contacts)\\.html",
-            "dest": "/$1.html"
-        },
-        {
-            "src": "/style\\.css",
-            "dest": "/style.css"
-        },
-        {
-            "src": "/app\\.js",
-            "dest": "/app.js"
-        }
-    ]
+    "cleanUrls": true
 }
