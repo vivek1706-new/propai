@@ -371,7 +371,7 @@ const MODAL_HTML = `
       </div>
       <h2 class="modal-title">Verify Your Number</h2>
       <p class="modal-subtitle">OTP sent to <strong id="otp-phone-display"></strong></p>
-      <div class="otp-hint">💡 Demo OTP: <strong class="otp-demo-code" id="demo-otp-display"></strong></div>
+      <div class="otp-hint" id="otp-sent-msg">📧 OTP sent to your email. Please check your inbox.</div>
       <div class="otp-boxes" id="otp-boxes">
         <input class="otp-box" type="text" maxlength="1" inputmode="numeric" oninput="otpInput(this)" onkeydown="otpKeydown(event,this)" />
         <input class="otp-box" type="text" maxlength="1" inputmode="numeric" oninput="otpInput(this)" onkeydown="otpKeydown(event,this)" />
@@ -424,9 +424,9 @@ const MODAL_HTML = `
 </div>`;
 
 // ── Modal state ───────────────────────────────────────────────────────────────
-let _prop = null;   // current property object
-let _mode = null;   // 'phone' or 'contact'
-let _mockOTP = '';     // generated OTP for this session
+let _prop = null;  // current property object
+let _mode = null;  // 'phone' or 'contact'
+let _otpToken = null;  // signed token returned by /api/send-otp (OTP never in client)
 let _buyerData = {};    // collected form data
 let _dbRecord = null;  // saved localStorage record (pre-verified)
 
@@ -476,8 +476,8 @@ function showStep(id) {
   });
 }
 
-// ── Form submission → save to DB with verified:false ──────────────────────────
-function submitForm() {
+// ── Form submission → calls /api/send-otp → stores signed token ──────────────
+async function submitForm() {
   clearErrors();
   const name = document.getElementById('buyer-name').value.trim();
   const phone = document.getElementById('buyer-phone').value.trim();
@@ -491,19 +491,7 @@ function submitForm() {
 
   _buyerData = { name, phone, email };
 
-  // Generate OTP
-  _mockOTP = String(Math.floor(100000 + Math.random() * 900000));
-
-  // ✅ Save to localStorage immediately (unverified) so we capture the attempt
-  _dbRecord = dbSaveContact({
-    name, phone, email,
-    propertyId: _prop.id,
-    propertyTitle: _prop.title,
-    otp: _mockOTP,
-    mode: _mode
-  });
-
-  // Animate button → loading
+  // Show loading
   const btn = document.getElementById('send-otp-btn');
   const label = document.getElementById('send-otp-label');
   const loader = document.getElementById('send-otp-loader');
@@ -511,16 +499,41 @@ function submitForm() {
   label.style.display = 'none';
   loader.style.display = 'inline-block';
 
-  setTimeout(() => {
+  try {
+    const resp = await fetch('/api/send-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, phone, propertyTitle: _prop.title })
+    });
+    const data = await resp.json();
+
+    if (!resp.ok) throw new Error(data.error || 'Failed to send OTP');
+
+    // Store signed token (OTP is inside, never exposed to browser)
+    _otpToken = data.token;
+
+    // Save attempt to localStorage as pending (OTP not known client-side — store placeholder)
+    _dbRecord = dbSaveContact({
+      name, phone, email,
+      propertyId: _prop.id,
+      propertyTitle: _prop.title,
+      otp: '(server-side)',
+      mode: _mode
+    });
+
+    // Show OTP step
+    document.getElementById('otp-phone-display').textContent = email;
+    document.getElementById('otp-sent-msg').textContent = `📧 OTP sent to ${email}. Please check your inbox.`;
+    showStep('step-otp');
+    setTimeout(() => document.querySelector('.otp-box').focus(), 200);
+
+  } catch (err) {
+    showError('err-email', err.message || 'Failed to send OTP. Please try again.');
+  } finally {
     btn.disabled = false;
     label.style.display = 'inline';
     loader.style.display = 'none';
-
-    document.getElementById('otp-phone-display').textContent = `+91 ${phone}`;
-    document.getElementById('demo-otp-display').textContent = _mockOTP;
-    showStep('step-otp');
-    setTimeout(() => document.querySelector('.otp-box').focus(), 200);
-  }, 1400);
+  }
 }
 
 // ── OTP helpers ───────────────────────────────────────────────────────────────
@@ -539,34 +552,63 @@ function otpKeydown(e, inp) {
   }
 }
 
-function resendOtp() {
-  _mockOTP = String(Math.floor(100000 + Math.random() * 900000));
-  // Update the record in DB with new OTP
-  if (_dbRecord) {
-    const records = dbGetAll();
-    const idx = records.findIndex(r => r.id === _dbRecord.id);
-    if (idx >= 0) { records[idx].otp = _mockOTP; localStorage.setItem(DB_KEY, JSON.stringify(records)); }
-    _dbRecord.otp = _mockOTP;
-  }
-  document.getElementById('demo-otp-display').textContent = _mockOTP;
+async function resendOtp() {
   document.querySelectorAll('.otp-box').forEach(b => b.value = '');
   document.getElementById('err-otp').textContent = '';
-  document.querySelector('.otp-box').focus();
-  showToast('OTP resent!');
+
+  try {
+    const resp = await fetch('/api/send-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: _buyerData.name,
+        email: _buyerData.email,
+        phone: _buyerData.phone,
+        propertyTitle: _prop.title
+      })
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Resend failed');
+    _otpToken = data.token;
+    showToast('✅ OTP resent to ' + _buyerData.email);
+    document.querySelector('.otp-box').focus();
+  } catch (err) {
+    showToast('❌ ' + (err.message || 'Failed to resend'));
+  }
 }
 
-// ── OTP verify → mark verified in DB ─────────────────────────────────────────
-function verifyOtp() {
+// ── OTP verify → calls /api/verify-otp server-side ───────────────────────────
+async function verifyOtp() {
   const entered = [...document.querySelectorAll('.otp-box')].map(b => b.value).join('');
   if (entered.length < 6) { showError('err-otp', 'Please enter all 6 digits'); return; }
-  if (entered !== _mockOTP) { showError('err-otp', 'Incorrect OTP — please try again'); return; }
 
+  // Disable all OTP boxes during verification
+  document.querySelectorAll('.otp-box').forEach(b => b.disabled = true);
   document.getElementById('err-otp').textContent = '';
 
-  // ✅ Mark verified in localStorage
-  if (_dbRecord) dbMarkVerified(_dbRecord.id);
+  try {
+    const resp = await fetch('/api/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: _otpToken, enteredOtp: entered })
+    });
+    const data = await resp.json();
 
-  showSuccessStep();
+    if (!resp.ok) {
+      showError('err-otp', data.error || 'Incorrect OTP — please try again');
+      document.querySelectorAll('.otp-box').forEach(b => { b.disabled = false; b.value = ''; });
+      document.querySelector('.otp-box').focus();
+      return;
+    }
+
+    // ✅ Verified server-side — mark in localStorage and show success
+    if (_dbRecord) dbMarkVerified(_dbRecord.id);
+    showSuccessStep();
+
+  } catch (err) {
+    showError('err-otp', 'Network error. Please try again.');
+    document.querySelectorAll('.otp-box').forEach(b => { b.disabled = false; });
+  }
 }
 
 // ── Success step ──────────────────────────────────────────────────────────────
