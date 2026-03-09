@@ -336,7 +336,7 @@ const MODAL_HTML = `
       <div class="modal-icon-wrap modal-icon-blue">
         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       </div>
-      <h2 class="modal-title" id="modal-title-text" id="form-title">Contact the Owner</h2>
+      <h2 class="modal-title" id="form-title">Contact the Owner</h2>
       <p class="modal-subtitle" id="form-subtitle">Fill in your details — the advertiser will be able to see them</p>
       <div class="modal-form">
         <div class="form-group">
