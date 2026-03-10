@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Search, MapPin, Building, Home as HomeIcon, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, MapPin, Building, Home as HomeIcon, ChevronRight, X } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { properties } from '../utils/properties';
 import PropertyCard from '../components/PropertyCard';
@@ -12,15 +12,20 @@ const Home = () => {
     const [searchType, setSearchType] = useState('buy');
     const [cityInput, setCityInput] = useState('');
     const [bhkFilter, setBhkFilter] = useState('');
+    const [showSuggestions, setShowSuggestions] = useState(false);
+
+    const cityOptions = ["Mumbai", "Bengaluru", "Hyderabad", "Delhi NCR", "Pune", "Chennai", "Koramangala", "Bandra", "Whitefield", "Gurgaon"];
+    const filteredCities = cityOptions.filter(city => city.toLowerCase().includes(cityInput.toLowerCase()));
 
     const openContact = (prop, mode) => {
         setModalStep({ prop, mode });
     };
 
-    const handleSearch = () => {
+    const handleSearch = (cityName) => {
         const params = new URLSearchParams();
+        const city = cityName || cityInput;
         if (searchType !== 'buy') params.set('type', searchType);
-        if (cityInput) params.set('city', cityInput);
+        if (city) params.set('city', city);
         if (bhkFilter) params.set('bhk', bhkFilter);
         navigate(`/listings?${params.toString()}`);
     };
@@ -56,19 +61,36 @@ const Home = () => {
                                         className="search-input"
                                         type="text"
                                         placeholder="Search city, locality or project"
-                                        list="city-suggestions"
                                         value={cityInput}
-                                        onChange={(e) => setCityInput(e.target.value)}
-                                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                                        onChange={(e) => {
+                                            setCityInput(e.target.value);
+                                            setShowSuggestions(true);
+                                        }}
+                                        onFocus={() => setShowSuggestions(true)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                handleSearch();
+                                                setShowSuggestions(false);
+                                            }
+                                        }}
                                     />
-                                    <datalist id="city-suggestions">
-                                        <option value="Mumbai" />
-                                        <option value="Bengaluru" />
-                                        <option value="Hyderabad" />
-                                        <option value="Delhi NCR" />
-                                        <option value="Pune" />
-                                        <option value="Chennai" />
-                                    </datalist>
+                                    {showSuggestions && cityInput.length > 0 && filteredCities.length > 0 && (
+                                        <div className="search-suggestions-dropdown">
+                                            {filteredCities.map(city => (
+                                                <div
+                                                    key={city}
+                                                    className="suggestion-item"
+                                                    onClick={() => {
+                                                        setCityInput(city);
+                                                        setShowSuggestions(false);
+                                                        handleSearch(city);
+                                                    }}
+                                                >
+                                                    <MapPin size={14} /> {city}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                                 <select
                                     className="search-select"
@@ -82,7 +104,7 @@ const Home = () => {
                                     <option value="4">4+ BHK</option>
                                 </select>
                             </div>
-                            <button className="search-btn" onClick={handleSearch}>
+                            <button className="search-btn" onClick={() => handleSearch()}>
                                 <Search size={18} /> Search Properties
                             </button>
                         </div>
@@ -112,7 +134,7 @@ const Home = () => {
                 </div>
 
                 <div className="cards-scroll anim-fade-in">
-                    {properties.slice(0, 4).map(prop => (
+                    {properties.slice(0, 6).map(prop => (
                         <PropertyCard
                             key={prop.id}
                             property={prop}

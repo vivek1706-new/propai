@@ -9,6 +9,18 @@ const Navbar = () => {
         <nav className="navbar">
             <Link to="/" className="navbar-logo">Nest<span>Finder</span></Link>
 
+            <div className="navbar-city-selector">
+                <select className="nav-city-select">
+                    <option>Select City</option>
+                    <option>Mumbai</option>
+                    <option>Bengaluru</option>
+                    <option>Hyderabad</option>
+                    <option>Delhi NCR</option>
+                    <option>Pune</option>
+                    <option>Chennai</option>
+                </select>
+            </div>
+
             <div className="navbar-links">
                 <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>Home</Link>
                 <Link to="/listings" className={`nav-link ${location.pathname === '/listings' ? 'active' : ''}`}>Listings</Link>

@@ -67,6 +67,23 @@ const Listings = () => {
                     <button className={`filter-chip ${filterType === 'buy' ? 'active' : ''}`} onClick={() => setFilterType('buy')}>For Buy</button>
                     <button className={`filter-chip ${filterType === 'rent' ? 'active' : ''}`} onClick={() => setFilterType('rent')}>For Rent</button>
 
+                    <div className="filter-chip-select-wrap">
+                        <select
+                            className="filter-chip-select"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        >
+                            <option value="">Select City</option>
+                            <option value="Mumbai">Mumbai</option>
+                            <option value="Bengaluru">Bengaluru</option>
+                            <option value="Hyderabad">Hyderabad</option>
+                            <option value="Delhi NCR">Delhi NCR</option>
+                            <option value="Pune">Pune</option>
+                            <option value="Chennai">Chennai</option>
+                        </select>
+                        <ChevronDown size={12} className="select-arrow" />
+                    </div>
+
                     {[1, 2, 3, 4].map(b => (
                         <button
                             key={b}
