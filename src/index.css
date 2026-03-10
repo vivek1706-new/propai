@@ -7,16 +7,27 @@
 
 /* ── CSS Variables ─────────────────────────────────────────────────── */
 :root {
-  --primary: #E13642;
-  --primary-light: #FBEBEC;
-  --secondary: #2C3E50;
-  --bg: #FFFFFF;
-  --bg-alt: #F8F9FA;
-  --text: #2D3436;
-  --muted: #636E72;
-  --border: #E9ECEF;
-  --shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.12);
+  --red: #E13642;
+  --red-d: #B71C1C;
+  --red-light: #FDECEA;
+  --white: #FFFFFF;
+  --bg: #F5F7FA;
+  --surface: #FFFFFF;
+  --border: #E0E0E0;
+  --text: #212121;
+  --text-2: #424242;
+  --muted: #757575;
+  --subtle: #9E9E9E;
+  --green: #2ECC71;
+  --green-d: #27AE60;
+  --blue: #1565C0;
+  --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.10);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --transition: 0.2s ease;
   --nav-h: 56px;
   --bottom-nav: 58px;
   /* mobile bottom bar height */
@@ -1237,209 +1248,85 @@ select {
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   CONTACT MODAL — React Version
+   CONTACT MODAL — 3-step (Form → OTP → Success)
 ══════════════════════════════════════════════════════════════════════ */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 2000;
-  background: rgba(0, 0, 0, 0.6);
+  z-index: 500;
+  background: rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: flex-end;
   /* bottom sheet on mobile */
   justify-content: center;
   padding: 0;
-  animation: fadeIn 0.2s ease-out;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
 }
 
-@media (min-width: 600px) {
-  .modal-overlay {
-    align-items: center;
-    padding: 20px;
-  }
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: all;
 }
 
 .modal-box {
   background: var(--white);
-  border-radius: 24px 24px 0 0;
+  border-radius: 20px 20px 0 0;
   width: 100%;
-  max-width: 500px;
   max-height: 92vh;
   overflow-y: auto;
-  padding: 20px 24px 40px;
+  padding: 20px 20px 32px;
   position: relative;
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.1);
+  animation: sheetUp 0.35s cubic-bezier(0.34, 1.3, 0.64, 1) both;
+  -webkit-overflow-scrolling: touch;
 }
 
-@media (min-width: 600px) {
-  .modal-box {
-    border-radius: 24px;
-    animation: zoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-}
-
-@keyframes zoomIn {
+@keyframes sheetUp {
   from {
-    opacity: 0;
-    transform: scale(0.95);
+    transform: translateY(100%);
   }
 
   to {
-    opacity: 1;
-    transform: scale(1);
+    transform: translateY(0);
   }
 }
 
+/* Handle bar */
 .modal-handle {
   width: 40px;
   height: 4px;
   background: var(--border);
   border-radius: 100px;
-  margin: 0 auto 20px;
-}
-
-@media (min-width: 600px) {
-  .modal-handle {
-    display: none;
-  }
+  margin: 0 auto 16px;
 }
 
 .modal-close {
   position: absolute;
   top: 16px;
   right: 16px;
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  background: var(--bg-alt);
+  background: var(--bg);
   color: var(--muted);
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 1rem;
   border: none;
-  cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition);
 }
 
 .modal-close:hover {
-  background: var(--primary-light);
-  color: var(--primary);
+  background: var(--red-light);
+  color: var(--red);
 }
 
+/* Step layout */
 .modal-step {
-  animation: fadeIn 0.4s ease-out;
-}
-
-.form-error-msg {
-  background: #FEF2F2;
-  color: #B91C1C;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  border: 1px solid #FECACA;
-  margin: 12px 0;
-}
-
-.otp-container {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  margin: 24px 0;
-}
-
-.otp-box {
-  width: 46px;
-  height: 56px;
-  background: var(--bg-alt);
-  border: 2px solid var(--border);
-  border-radius: 12px;
-  font-size: 1.5rem;
-  font-weight: 800;
-  text-align: center;
-  color: var(--text);
-  transition: all 0.2s;
-}
-
-.otp-box:focus {
-  outline: none;
-  border-color: var(--primary);
-  background: #FFFFFF;
-  box-shadow: 0 0 0 4px rgba(225, 54, 66, 0.1);
-}
-
-.otp-footer {
-  text-align: center;
-  margin-top: 20px;
-  font-size: 0.9rem;
-  color: var(--muted);
-}
-
-.btn-text {
-  background: none;
-  border: none;
-  color: var(--primary);
-  font-weight: 700;
-  cursor: pointer;
-  text-decoration: underline;
-  padding: 0 4px;
-}
-
-.phone-reveal-box {
-  background: #F8FAFC;
-  border: 2px dashed #CBD5E1;
-  border-radius: 16px;
-  padding: 24px;
-  margin: 24px 0;
-}
-
-.reveal-label {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  margin-bottom: 8px;
-}
-
-.reveal-val {
-  font-size: 1.8rem;
-  font-weight: 800;
-  color: var(--primary);
-  margin-bottom: 16px;
-}
-
-.btn-call-large {
-  display: block;
-  background: #22C55E;
-  color: white;
-  padding: 14px;
-  border-radius: 12px;
-  text-decoration: none;
-  font-weight: 700;
-  text-align: center;
-  transition: transform 0.2s;
-}
-
-.btn-primary-modal {
-  width: 100%;
-  background: var(--primary);
-  color: white;
-  border: none;
-  padding: 16px;
-  border-radius: 14px;
-  font-size: 1rem;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: opacity 0.2s;
-}
-
-.btn-primary-modal:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
+  transition: opacity 0.3s ease;
 }
 
 .modal-icon-wrap {
@@ -2270,4 +2157,214 @@ tr:hover td {
   .cards-grid {
     grid-template-columns: repeat(3, 1fr);
   }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   REACT LAYOUT & ANIMATION FIXES
+══════════════════════════════════════════════════════════════════════ */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main.content {
+  flex: 1;
+  padding-bottom: var(--bottom-nav);
+}
+
+@media (min-width: 768px) {
+  main.content {
+    padding-bottom: 0;
+  }
+}
+
+.anim-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.anim-fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+.anim-fade-up {
+  animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Ensure Modals are always active when rendered in React */
+.modal-overlay {
+  opacity: 1 !important;
+  pointer-events: all !important;
+  display: flex !important;
+  align-items: flex-end;
+  /* bottom sheet on mobile */
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .modal-overlay {
+    align-items: center;
+  }
+}
+
+.modal-box {
+  animation: modalIn 0.35s cubic-bezier(0.34, 1.3, 0.64, 1) both;
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (min-width: 768px) {
+  @keyframes modalIn {
+    from {
+      opacity: 0;
+      transform: scale(0.9) translateY(0);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+}
+
+.form-error-msg {
+  background: #FEF2F2;
+  color: #B91C1C;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border: 1px solid #FECACA;
+  margin: 10px 0;
+  text-align: center;
+}
+
+.otp-container {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.otp-box {
+  width: 44px;
+  height: 52px;
+  background: #fafafa;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 1.4rem;
+  font-weight: 800;
+  text-align: center;
+  color: var(--text);
+  transition: var(--transition);
+}
+
+.otp-box:focus {
+  outline: none;
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px rgba(225, 54, 66, 0.1);
+  background: var(--white);
+}
+
+.phone-reveal-box {
+  background: #F8FAFC;
+  border: 1.5px dashed #CBD5E1;
+  border-radius: 12px;
+  padding: 24px;
+  margin: 20px 0;
+  text-align: center;
+}
+
+.reveal-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.reveal-val {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--red);
+  margin-bottom: 12px;
+}
+
+.btn-call-large {
+  display: block;
+  background: var(--green);
+  color: white;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  font-weight: 700;
+  text-align: center;
+}
+
+.btn-primary-modal {
+  width: 100%;
+  background: var(--red);
+  color: white;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-primary-modal:disabled {
+  opacity: 0.6;
+}
+
+.btn-text {
+  background: none;
+  border: none;
+  color: var(--red);
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
 }
