@@ -49,7 +49,9 @@ const Contacts = () => {
                 c.name.toLowerCase().includes(q) ||
                 (c.phone || '').includes(q) ||
                 (c.email || '').toLowerCase().includes(q) ||
-                (c.property_title || '').toLowerCase().includes(q)
+                (c.property_title || '').toLowerCase().includes(q) ||
+                (c.city || '').toLowerCase().includes(q) ||
+                (c.locality || '').toLowerCase().includes(q)
             )
             : allContacts;
         setFilteredContacts(list);
@@ -77,9 +79,10 @@ const Contacts = () => {
 
     const exportCSV = () => {
         if (!allContacts.length) { alert('No contacts to export.'); return; }
-        const header = ['#', 'Name', 'Phone', 'Email', 'Property', 'OTP', 'Mode', 'Verified', 'Timestamp'];
+        const header = ['#', 'Name', 'Phone', 'Email', 'Property', 'Locality', 'City', 'OTP', 'Mode', 'Verified', 'Timestamp'];
         const rows = allContacts.map((c, i) => [
             i + 1, c.name, '+91' + c.phone, c.email || '', c.property_title || '',
+            c.locality || '', c.city || '',
             c.otp || '', c.mode, c.verified ? 'Yes' : 'No', c.created_at
         ]);
         const csv = [header, ...rows].map(r => r.map(f => `"${String(f).replace(/"/g, '""')}"`).join(',')).join('\n');
@@ -152,6 +155,8 @@ const Contacts = () => {
                                 <th>Phone</th>
                                 <th>Email</th>
                                 <th>Property</th>
+                                <th>Locality</th>
+                                <th>City</th>
                                 <th>OTP</th>
                                 <th>Mode</th>
                                 <th>Status</th>
@@ -160,24 +165,26 @@ const Contacts = () => {
                         </thead>
                         <tbody>
                             {loading && allContacts.length === 0 ? (
-                                <tr className="no-data-row"><td colSpan="9">⏳ Loading from Supabase...</td></tr>
+                                <tr className="no-data-row"><td colSpan="11">⏳ Loading from Supabase...</td></tr>
                             ) : error ? (
-                                <tr className="no-data-row"><td colSpan="9" style={{ color: 'var(--primary)' }}>⚠️ {error}</td></tr>
+                                <tr className="no-data-row"><td colSpan="11" style={{ color: 'var(--primary)' }}>⚠️ {error}</td></tr>
                             ) : filteredContacts.length === 0 ? (
-                                <tr className="no-data-row"><td colSpan="9">📭 No contacts yet.</td></tr>
+                                <tr className="no-data-row"><td colSpan="11">📭 No contacts yet.</td></tr>
                             ) : (
                                 filteredContacts.map((c, i) => {
                                     const time = new Date(c.created_at);
                                     const timeStr = time.toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-                                    const title = (c.property_title || '').length > 30 ? c.property_title.slice(0, 30) + '...' : c.property_title || '--';
+                                    const title = (c.property_title || '').length > 25 ? c.property_title.slice(0, 25) + '...' : c.property_title || '--';
 
                                     return (
                                         <tr key={c.id}>
                                             <td><strong>{i + 1}</strong></td>
                                             <td><strong>{c.name}</strong></td>
                                             <td>+91 {c.phone}</td>
-                                            <td>{c.email || '--'}</td>
+                                            <td style={{ fontSize: '0.75rem' }}>{c.email || '--'}</td>
                                             <td title={c.property_title}>{title}</td>
+                                            <td>{c.locality || '--'}</td>
+                                            <td>{c.city || '--'}</td>
                                             <td><span className="otp-code">{c.otp || '--'}</span></td>
                                             <td>{c.mode === 'phone' ? '📞 Phone' : '✉ Contact'}</td>
                                             <td>

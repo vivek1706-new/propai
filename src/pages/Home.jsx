@@ -1,17 +1,28 @@
 import React, { useState } from 'react';
 import { Search, MapPin, Building, Home as HomeIcon, ChevronRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { properties } from '../utils/properties';
 import PropertyCard from '../components/PropertyCard';
 import ContactModal from '../components/ContactModal';
 
 const Home = () => {
+    const navigate = useNavigate();
     const [selectedProp, setSelectedProp] = useState(null);
     const [modalStep, setModalStep] = useState(null); // { prop, mode }
     const [searchType, setSearchType] = useState('buy');
+    const [cityInput, setCityInput] = useState('');
+    const [bhkFilter, setBhkFilter] = useState('');
 
     const openContact = (prop, mode) => {
         setModalStep({ prop, mode });
+    };
+
+    const handleSearch = () => {
+        const params = new URLSearchParams();
+        if (searchType !== 'buy') params.set('type', searchType);
+        if (cityInput) params.set('city', cityInput);
+        if (bhkFilter) params.set('bhk', bhkFilter);
+        navigate(`/listings?${params.toString()}`);
     };
 
     return (
@@ -31,18 +42,49 @@ const Home = () => {
                                 className={`search-tab ${searchType === 'rent' ? 'active' : ''}`}
                                 onClick={() => setSearchType('rent')}
                             >Rent</button>
+                            <button
+                                className={`search-tab ${searchType === 'commercial' ? 'active' : ''}`}
+                                onClick={() => setSearchType('commercial')}
+                            >Commercial</button>
                         </div>
 
                         <div className="search-body">
                             <div className="search-row">
                                 <div className="search-input-wrap">
-                                    <Search className="search-input-icon" size={18} />
-                                    <input className="search-input" type="text" placeholder="Search by city, locality or project name" />
+                                    <MapPin className="search-input-icon" size={18} />
+                                    <input
+                                        className="search-input"
+                                        type="text"
+                                        placeholder="Search city, locality or project"
+                                        list="city-suggestions"
+                                        value={cityInput}
+                                        onChange={(e) => setCityInput(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                                    />
+                                    <datalist id="city-suggestions">
+                                        <option value="Mumbai" />
+                                        <option value="Bengaluru" />
+                                        <option value="Hyderabad" />
+                                        <option value="Delhi NCR" />
+                                        <option value="Pune" />
+                                        <option value="Chennai" />
+                                    </datalist>
                                 </div>
-                                <button className="search-btn">
-                                    <Search size={18} /> Search
-                                </button>
+                                <select
+                                    className="search-select"
+                                    value={bhkFilter}
+                                    onChange={(e) => setBhkFilter(e.target.value)}
+                                >
+                                    <option value="">Any BHK</option>
+                                    <option value="1">1 BHK</option>
+                                    <option value="2">2 BHK</option>
+                                    <option value="3">3 BHK</option>
+                                    <option value="4">4+ BHK</option>
+                                </select>
                             </div>
+                            <button className="search-btn" onClick={handleSearch}>
+                                <Search size={18} /> Search Properties
+                            </button>
                         </div>
                     </div>
 
@@ -57,7 +99,7 @@ const Home = () => {
                         </div>
                         <div className="hero-stat">
                             <strong>50K+</strong>
-                            <small>Happy Users</small>
+                            <small>Verified Owners</small>
                         </div>
                     </div>
                 </div>
@@ -86,12 +128,12 @@ const Home = () => {
                 </div>
                 <div className="locality-scroll">
                     {[
-                        { name: 'Bandra', city: 'Mumbai', img: 'https://images.unsplash.com/photo-1566552881560-0be134510105?w=200&q=80', count: '1.2K+' },
-                        { name: 'Whitefield', city: 'Bengaluru', img: 'https://images.unsplash.com/photo-1590633390382-789a42be4075?w=200&q=80', count: '800+' },
-                        { name: 'Hitech City', city: 'Hyderabad', img: 'https://images.unsplash.com/photo-1605146764387-0b196fa049d5?w=200&q=80', count: '650+' },
-                        { name: 'Gurgaon', city: 'Delhi NCR', img: 'https://images.unsplash.com/photo-1581333100576-b73bbe92c2cb?w=200&q=80', count: '1.5K+' }
+                        { name: 'Bandra', city: 'Mumbai', img: 'https://images.unsplash.com/photo-1566552881560-0be134510105?w=300&q=80', count: '1.2K+' },
+                        { name: 'Whitefield', city: 'Bengaluru', img: 'https://images.unsplash.com/photo-1590633390382-789a42be4075?w=300&q=80', count: '800+' },
+                        { name: 'Hitech City', city: 'Hyderabad', img: 'https://images.unsplash.com/photo-1605146764387-0b196fa049d5?w=300&q=80', count: '650+' },
+                        { name: 'Gurgaon', city: 'Delhi NCR', img: 'https://images.unsplash.com/photo-1581333100576-b73bbe92c2cb?w=300&q=80', count: '1.5K+' }
                     ].map((loc, i) => (
-                        <div key={i} className="locality-card">
+                        <Link to={`/listings?city=${loc.name}`} key={i} className="locality-card">
                             <img className="locality-bg" src={loc.img} alt={loc.name} />
                             <div className="locality-overlay">
                                 <div className="locality-info">
@@ -99,7 +141,7 @@ const Home = () => {
                                     <p>{loc.count} Properties</p>
                                 </div>
                             </div>
-                        </div>
+                        </Link>
                     ))}
                 </div>
             </section>

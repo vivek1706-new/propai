@@ -40,6 +40,8 @@ const ContactModal = ({ isOpen, onClose, property, mode }) => {
                     ...formData,
                     propertyId: property?.id,
                     propertyTitle: property?.title,
+                    city: property?.city,
+                    locality: property?.locality,
                     mode: mode
                 })
             });

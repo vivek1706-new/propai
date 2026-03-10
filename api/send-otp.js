@@ -144,7 +144,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { name, email, phone, propertyId, propertyTitle, mode } = req.body || {};
+    const { name, email, phone, propertyId, propertyTitle, city, locality, mode } = req.body || {};
 
     if (!name || !email || !phone) {
       return res.status(400).json({ error: 'Missing required fields: name, email, phone' });
@@ -174,6 +174,8 @@ export default async function handler(req, res) {
       email,
       property_id: propertyId,
       property_title: propertyTitle,
+      city: city,
+      locality: locality,
       otp: otp,
       mode: mode || 'contact',
       verified: false

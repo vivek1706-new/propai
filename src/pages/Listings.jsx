@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Search, MapPin, X, SlidersHorizontal, ChevronDown, CheckCircle2, LayoutGrid, List } from 'lucide-react';
+import { Search, MapPin, X, SlidersHorizontal, ChevronDown, CheckCircle2, LayoutGrid, List, Filter } from 'lucide-react';
 import { properties } from '../utils/properties';
 import PropertyCard from '../components/PropertyCard';
 import ContactModal from '../components/ContactModal';
 
 const Listings = () => {
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [filteredProps, setFilteredProps] = useState(properties);
-    const [searchQuery, setSearchQuery] = useState('');
+    const [searchQuery, setSearchQuery] = useState(searchParams.get('city') || '');
     const [filterType, setFilterType] = useState(searchParams.get('type') || 'all');
-    const [budget, setBudget] = useState(50000000); // 5Cr
+    const [budget, setBudget] = useState(100000000); // 10Cr
+    const [selectedBhk, setSelectedBhk] = useState(searchParams.get('bhk') ? [parseInt(searchParams.get('bhk'))] : []);
+    const [selectedLocalities, setSelectedLocalities] = useState(searchParams.get('locality') ? [searchParams.get('locality')] : []);
     const [modalData, setModalData] = useState(null);
+    const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
+
+    const localities = [...new Set(properties.map(p => p.locality))];
 
     useEffect(() => {
         let list = [...properties];
@@ -29,13 +34,29 @@ const Listings = () => {
             );
         }
 
+        if (selectedBhk.length > 0) {
+            list = list.filter(p => selectedBhk.includes(p.bhk));
+        }
+
+        if (selectedLocalities.length > 0) {
+            list = list.filter(p => selectedLocalities.includes(p.locality));
+        }
+
         list = list.filter(p => p.price <= budget);
 
         setFilteredProps(list);
-    }, [filterType, searchQuery, budget]);
+    }, [filterType, searchQuery, budget, selectedBhk, selectedLocalities]);
 
     const openContact = (prop, mode) => {
         setModalData({ prop, mode });
+    };
+
+    const toggleBhk = (val) => {
+        setSelectedBhk(prev => prev.includes(val) ? prev.filter(x => x !== val) : [...prev, val]);
+    };
+
+    const toggleLocality = (loc) => {
+        setSelectedLocalities(prev => prev.includes(loc) ? prev.filter(x => x !== loc) : [...prev, loc]);
     };
 
     return (
@@ -45,14 +66,50 @@ const Listings = () => {
                     <button className={`filter-chip ${filterType === 'all' ? 'active' : ''}`} onClick={() => setFilterType('all')}>All Properties</button>
                     <button className={`filter-chip ${filterType === 'buy' ? 'active' : ''}`} onClick={() => setFilterType('buy')}>For Buy</button>
                     <button className={`filter-chip ${filterType === 'rent' ? 'active' : ''}`} onClick={() => setFilterType('rent')}>For Rent</button>
-                    <button className="filter-chip">Budget: ₹{(budget / 10000000).toFixed(1)}Cr <ChevronDown size={14} /></button>
-                    <button className="filter-chip">Property Type <ChevronDown size={14} /></button>
-                    <button className="filter-chip">BHK <ChevronDown size={14} /></button>
+
+                    {[1, 2, 3, 4].map(b => (
+                        <button
+                            key={b}
+                            className={`filter-chip ${selectedBhk.includes(b) ? 'active' : ''}`}
+                            onClick={() => toggleBhk(b)}
+                        >{b} BHK</button>
+                    ))}
+
+                    <button className="filter-chip" onClick={() => setIsFilterPanelOpen(true)}>
+                        <Filter size={14} /> More Filters
+                    </button>
                 </div>
             </div>
 
             <div className="listings-layout">
                 <aside className="filter-sidebar">
+                    <div className="filter-section">
+                        <div className="filter-title">Locality / City</div>
+                        <div className="search-input-wrap" style={{ marginBottom: '12px' }}>
+                            <Search className="search-input-icon" size={14} />
+                            <input
+                                className="search-input"
+                                type="text"
+                                placeholder="Search locality..."
+                                style={{ fontSize: '0.8rem', padding: '8px 8px 8px 30px' }}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
+                        <div className="locality-filter" style={{ maxHeight: '150px', overflowY: 'auto' }}>
+                            {localities.map(loc => (
+                                <label key={loc} className="checkbox-item">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedLocalities.includes(loc)}
+                                        onChange={() => toggleLocality(loc)}
+                                    />
+                                    <span>{loc}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+
                     <div className="filter-section">
                         <div className="filter-title">Budget</div>
                         <div className="budget-display">Up to <span>₹{(budget / 10000000).toFixed(1)} Cr</span></div>
@@ -66,20 +123,20 @@ const Listings = () => {
                             onChange={(e) => setBudget(Number(e.target.value))}
                         />
                         <div className="budget-presets">
-                            {[10, 50, 100, 200, 500].map(L => (
+                            {[10, 50, 100, 250, 500].map(L => (
                                 <button key={L} className="preset-btn" onClick={() => setBudget(L * 100000)}>₹{L}L</button>
                             ))}
+                            <button className="preset-btn" onClick={() => setBudget(100000000)}>All</button>
                         </div>
                     </div>
 
                     <div className="filter-section">
                         <div className="filter-title">Property Type</div>
-                        <div className="locality-filter">
-                            {['Flat', 'Villa', 'Plot', 'Penthouse'].map(type => (
-                                <label key={type} className="checkbox-item">
-                                    <input type="checkbox" defaultChecked />
-                                    <span>{type}</span>
-                                </label>
+                        <div className="pill-group">
+                            {['Flat', 'Villa', 'Plot', 'Commercial'].map(type => (
+                                <button key={type} className="pill">
+                                    {type}
+                                </button>
                             ))}
                         </div>
                     </div>
@@ -88,17 +145,29 @@ const Listings = () => {
                 <div className="listings-content">
                     <div className="sort-bar">
                         <div className="results-info">
-                            Showing <span>{filteredProps.length}</span> results for you
+                            Showing <span>{filteredProps.length}</span> results for <span>{searchQuery || 'Everywhere'}</span>
                         </div>
                         <div className="sort-controls">
                             <span className="sort-label">Sort by:</span>
                             <select className="sort-select">
-                                <option>Relevance</option>
+                                <option>Featured</option>
                                 <option>Price: Low to High</option>
                                 <option>Price: High to Low</option>
                                 <option>Recently Added</option>
                             </select>
                         </div>
+                    </div>
+
+                    <div className="active-filters">
+                        {searchQuery && (
+                            <span className="active-tag">{searchQuery} <button onClick={() => setSearchQuery('')}>×</button></span>
+                        )}
+                        {selectedBhk.map(b => (
+                            <span key={b} className="active-tag">{b} BHK <button onClick={() => toggleBhk(b)}>×</button></span>
+                        ))}
+                        {selectedLocalities.map(loc => (
+                            <span key={loc} className="active-tag">{loc} <button onClick={() => toggleLocality(loc)}>×</button></span>
+                        ))}
                     </div>
 
                     {filteredProps.length > 0 ? (
@@ -115,8 +184,8 @@ const Listings = () => {
                         <div className="empty-state">
                             <div className="empty-icon">📂</div>
                             <h3>No properties found</h3>
-                            <p>Try adjusting your filters or search area</p>
-                            <button className="btn-outline" style={{ marginTop: '16px' }} onClick={() => { setFilterType('all'); setBudget(100000000); setSearchQuery(''); }}>Reset All Filters</button>
+                            <p>Try adjusting your search or filters</p>
+                            <button className="btn-outline" style={{ marginTop: '16px' }} onClick={() => { setFilterType('all'); setBudget(100000000); setSearchQuery(''); setSelectedBhk([]); setSelectedLocalities([]); }}>Reset All</button>
                         </div>
                     )}
                 </div>
