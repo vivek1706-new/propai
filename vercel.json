@@ -1,5 +1,5 @@
 {
-    "buildCommand": "",
+    "buildCommand": "echo 'skipping vite build — static site'",
     "outputDirectory": ".",
     "rewrites": [
         {
