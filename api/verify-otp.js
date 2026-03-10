@@ -10,29 +10,36 @@ function verifyToken(token, enteredOtp) {
 
     const [payload, sig] = parts;
 
+    // 1. Verify Signature
     const expected = crypto.createHmac('sha256', SECRET).update(payload).digest('base64url');
     const sigBuf = Buffer.from(sig, 'base64url');
     const expBuf = Buffer.from(expected, 'base64url');
 
     if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
-        return { valid: false, error: 'Invalid or tampered token' };
+        console.error('Token signature mismatch');
+        return { valid: false, error: 'Authorization error (tampered token)' };
     }
 
+    // 2. Decode & Parse Payload
     let data;
     try {
         data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf-8'));
-    } catch {
-        return { valid: false, error: 'Malformed token payload' };
+    } catch (e) {
+        return { valid: false, error: 'Malformed token data' };
     }
 
+    // 3. Check Expiry
     if (Date.now() > data.exp) {
-        return { valid: false, error: 'OTP has expired. Please request a new one.' };
+        return { valid: false, error: 'OTP has expired (valid for 10 min). Please resend.' };
     }
 
-    const entered = Buffer.from(String(enteredOtp));
-    const actual = Buffer.from(String(data.otp));
-    if (entered.length !== actual.length || !crypto.timingSafeEqual(entered, actual)) {
-        return { valid: false, error: 'Incorrect OTP. Please try again.' };
+    // 4. Check OTP (Standard string comparison is safer for 6-digit codes)
+    const actualStr = String(data.otp).trim();
+    const enteredStr = String(enteredOtp).trim();
+
+    if (actualStr !== enteredStr) {
+        console.log(`Verify failed: Entered "${enteredStr}" vs Actual "${actualStr}"`);
+        return { valid: false, error: 'Incorrect OTP. Please check your email and try again.' };
     }
 
     return { valid: true, email: data.email };
