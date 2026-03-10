@@ -1,12 +1,9 @@
-// api/send-otp.js  — Vercel Serverless Function
-// Generates OTP, sends via Resend HTTP API using Node https module, returns signed token
-
-const crypto = require('crypto');
-const https = require('https');
+// api/send-otp.js  — Vercel Serverless Function (ES Module)
+import crypto from 'crypto';
+import https from 'https';
 
 const SECRET = process.env.OTP_SECRET || 'nestfinder-otp-secret-change-me';
 
-// ── helpers ──────────────────────────────────────────────────────────────────
 function generateOTP() {
   return String(crypto.randomInt(100000, 999999));
 }
@@ -60,7 +57,6 @@ ${propertyTitle ? `view contact details for <strong>${escHtml(propertyTitle)}</s
 </body></html>`;
 }
 
-// Send email via Resend REST API using Node's built-in https module
 function sendEmail(apiKey, to, subject, html) {
   return new Promise((resolve, reject) => {
     const body = JSON.stringify({
@@ -92,15 +88,13 @@ function sendEmail(apiKey, to, subject, html) {
         }
       });
     });
-
     req.on('error', reject);
     req.write(body);
     req.end();
   });
 }
 
-// ── handler ───────────────────────────────────────────────────────────────────
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -126,12 +120,7 @@ module.exports = async (req, res) => {
     const otp = generateOTP();
     const token = signToken(email, otp);
 
-    await sendEmail(
-      RESEND_API_KEY,
-      email,
-      `${otp} is your NestFinder verification code`,
-      buildEmailHTML(name, otp, propertyTitle)
-    );
+    await sendEmail(RESEND_API_KEY, email, `${otp} is your NestFinder verification code`, buildEmailHTML(name, otp, propertyTitle));
 
     return res.status(200).json({ token, message: 'OTP sent successfully' });
 
@@ -139,4 +128,4 @@ module.exports = async (req, res) => {
     console.error('send-otp error:', err);
     return res.status(500).json({ error: err.message || 'Server error. Please try again.' });
   }
-};
+}
