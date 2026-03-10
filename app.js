@@ -505,7 +505,15 @@ async function submitForm() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, phone, propertyTitle: _prop.title })
     });
-    const data = await resp.json();
+
+    let data;
+    const ct = resp.headers.get('content-type') || '';
+    if (ct.includes('application/json')) {
+      data = await resp.json();
+    } else {
+      const txt = await resp.text();
+      throw new Error(resp.ok ? 'Unexpected server response' : (txt.slice(0, 100) || 'Server error'));
+    }
 
     if (!resp.ok) throw new Error(data.error || 'Failed to send OTP');
 

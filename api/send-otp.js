@@ -1,25 +1,28 @@
 // api/send-otp.js  — Vercel Serverless Function
-// Generates OTP, sends via Resend email API, returns signed token (OTP never exposed to client)
+// Generates OTP, sends via Resend HTTP API (no npm dependency), returns signed token
 
-const { Resend } = require('resend');
 const crypto = require('crypto');
 
 const SECRET = process.env.OTP_SECRET || 'nestfinder-otp-secret-change-me';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 function generateOTP() {
-    return String(crypto.randomInt(100000, 999999));
+  return String(crypto.randomInt(100000, 999999));
 }
 
 function signToken(email, otp) {
-    const exp = Date.now() + 10 * 60 * 1000; // 10 minutes
-    const payload = Buffer.from(JSON.stringify({ email, otp, exp })).toString('base64url');
-    const sig = crypto.createHmac('sha256', SECRET).update(payload).digest('base64url');
-    return `${payload}.${sig}`;
+  const exp = Date.now() + 10 * 60 * 1000; // 10 minutes
+  const payload = Buffer.from(JSON.stringify({ email, otp, exp })).toString('base64url');
+  const sig = crypto.createHmac('sha256', SECRET).update(payload).digest('base64url');
+  return `${payload}.${sig}`;
+}
+
+function escHtml(str) {
+  return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 function buildEmailHTML(name, otp, propertyTitle) {
-    return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -88,49 +91,59 @@ function buildEmailHTML(name, otp, propertyTitle) {
 </html>`;
 }
 
-function escHtml(str) {
-    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
 // ── handler ───────────────────────────────────────────────────────────────────
 module.exports = async (req, res) => {
-    // CORS headers
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  // CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    if (req.method === 'OPTIONS') return res.status(200).end();
-    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
+  try {
     const { name, email, phone, propertyTitle } = req.body || {};
 
     if (!name || !email || !phone) {
-        return res.status(400).json({ error: 'Missing required fields: name, email, phone' });
+      return res.status(400).json({ error: 'Missing required fields: name, email, phone' });
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        return res.status(400).json({ error: 'Invalid email address' });
+      return res.status(400).json({ error: 'Invalid email address' });
     }
 
     const RESEND_API_KEY = process.env.RESEND_API_KEY;
     if (!RESEND_API_KEY) {
-        return res.status(500).json({ error: 'Email service not configured. Set RESEND_API_KEY env var.' });
+      return res.status(500).json({ error: 'Email service not configured. Please set RESEND_API_KEY in Vercel environment variables.' });
     }
 
     const otp = generateOTP();
     const token = signToken(email, otp);
 
-    try {
-        const resend = new Resend(RESEND_API_KEY);
-        await resend.emails.send({
-            from: process.env.FROM_EMAIL || 'NestFinder <onboarding@resend.dev>',
-            to: [email],
-            subject: `${otp} is your NestFinder verification code`,
-            html: buildEmailHTML(name, otp, propertyTitle),
-        });
+    // Send email via Resend HTTP API (no npm package needed)
+    const emailResp = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: process.env.FROM_EMAIL || 'NestFinder <onboarding@resend.dev>',
+        to: [email],
+        subject: `${otp} is your NestFinder verification code`,
+        html: buildEmailHTML(name, otp, propertyTitle)
+      })
+    });
 
-        res.status(200).json({ token, message: 'OTP sent successfully' });
-    } catch (err) {
-        console.error('Resend error:', err);
-        res.status(500).json({ error: 'Failed to send email. Please try again.' });
+    if (!emailResp.ok) {
+      const errData = await emailResp.text();
+      console.error('Resend API error:', emailResp.status, errData);
+      return res.status(500).json({ error: 'Failed to send email. Please try again.' });
     }
+
+    return res.status(200).json({ token, message: 'OTP sent successfully' });
+
+  } catch (err) {
+    console.error('send-otp error:', err);
+    return res.status(500).json({ error: 'Server error. Please try again.' });
+  }
 };
