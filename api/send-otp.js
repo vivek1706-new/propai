@@ -167,20 +167,34 @@ export default async function handler(req, res) {
     const otp = generateOTP();
     const token = signToken(email, otp);
 
-    // Call Resend (Send Email)
-    await sendEmail(RESEND_API_KEY, email, `${otp} is your NestFinder verification code`, buildEmailHTML(name, otp, propertyTitle));
-
-    // Call Supabase (Insert Contact)
+    // 1. Call Supabase (Insert Contact) - DO THIS FIRST so record exists even if email fails
     const record = await insertContact(SUPABASE_URL, SUPABASE_ANON_KEY, {
       name,
       phone,
       email,
       property_id: propertyId,
       property_title: propertyTitle,
-      otp: otp, // Storing for trace (optional, user asked for it)
+      otp: otp,
       mode: mode || 'contact',
       verified: false
     });
+
+    // 2. Call Resend (Send Email)
+    try {
+      await sendEmail(RESEND_API_KEY, email, `${otp} is your NestFinder verification code`, buildEmailHTML(name, otp, propertyTitle));
+    } catch (err) {
+      console.error('Email failed:', err.message);
+
+      // Custom helpful message for Resend 403
+      if (err.message.includes('403')) {
+        return res.status(200).json({
+          token,
+          recordId: record ? record.id : null,
+          message: 'OTP initiated (Supabase OK), but Resend blocked the email. Note: Free accounts can only send to vivek1706@gmail.com. Check Supabase for the OTP code!'
+        });
+      }
+      throw err; // Re-throw other errors
+    }
 
     return res.status(200).json({
       token,
