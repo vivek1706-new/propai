@@ -538,7 +538,7 @@ async function submitForm() {
 
     // Show OTP step
     document.getElementById('otp-phone-display').textContent = email;
-    document.getElementById('otp-sent-msg').textContent = `📧 OTP sent to ${email}. Please check your inbox.`;
+    document.getElementById('otp-sent-msg').textContent = data.message || `📧 OTP sent to ${email}. Please check your inbox.`;
     showStep('step-otp');
     setTimeout(() => document.querySelector('.otp-box').focus(), 200);
 
@@ -586,7 +586,7 @@ async function resendOtp() {
     if (!resp.ok) throw new Error(data.error || 'Resend failed');
     _otpToken = data.token;
     _recordId = data.recordId;
-    showToast('✅ OTP resent to ' + _buyerData.email);
+    showToast('✅ ' + (data.message || 'OTP resent to ' + _buyerData.email));
     document.querySelector('.otp-box').focus();
   } catch (err) {
     showToast('❌ ' + (err.message || 'Failed to resend'));
