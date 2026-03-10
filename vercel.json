@@ -1,6 +1,4 @@
 {
-    "buildCommand": "echo 'skipping vite build — static site'",
-    "outputDirectory": ".",
     "rewrites": [
         {
             "source": "/api/(.*)",
