@@ -153,14 +153,52 @@
 
     <script>
         const DB_KEY = 'nf_contacts';
+        const SUPABASE_URL = 'https://nzgfrebvpwvgrdcwkbld.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_Sb6pjsCDtvV6HwXImrKF_A_N0IKULmG';
+
         let allContacts = [];
 
-        function loadContacts() {
-            allContacts = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
-            // Sort newest first
-            allContacts.sort((a, b) => b.id - a.id);
-            updateStats();
-            renderTable();
+        async function loadContacts() {
+            const tbody = document.getElementById('contacts-tbody');
+            if (!allContacts.length) {
+                tbody.innerHTML = '<tr class="no-data-row"><td colspan="9">⏳ Loading from Supabase...</td></tr>';
+            }
+
+            try {
+                // Fetch from Supabase REST API
+                const resp = await fetch(`${SUPABASE_URL}/rest/v1/contacts?select=*&order=created_at.desc`, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+
+                if (!resp.ok) {
+                    const err = await resp.json();
+                    if (err.message && err.message.includes('not find')) {
+                        throw new Error('Table "contacts" does not exist in Supabase yet. Please run the SQL in dashboard.');
+                    }
+                    throw new Error(err.message || 'Failed to fetch from Supabase');
+                }
+
+                allContacts = await resp.json();
+
+                // Map Supabase fields to the UI expectations if needed
+                allContacts = allContacts.map(c => ({
+                    ...c,
+                    timestamp: c.created_at, // Map created_at to timestamp
+                    propertyTitle: c.property_title // Map to property_title
+                }));
+
+                updateStats();
+                renderTable();
+            } catch (err) {
+                console.error('Fetch error:', err);
+                tbody.innerHTML = `<tr class="no-data-row"><td colspan="9" style="color:var(--primary)">
+                    ⚠️ ${err.message}<br/>
+                    <small>Make sure the "contacts" table exists and RLS is disabled or allows SELECT.</small>
+                </td></tr>`;
+            }
         }
 
         function updateStats() {
@@ -176,17 +214,22 @@
             const list = q
                 ? allContacts.filter(c =>
                     c.name.toLowerCase().includes(q) ||
-                    c.phone.includes(q) ||
+                    (c.phone || '').includes(q) ||
                     (c.email || '').toLowerCase().includes(q) ||
                     (c.propertyTitle || '').toLowerCase().includes(q)
                 )
                 : allContacts;
 
             const tbody = document.getElementById('contacts-tbody');
-            if (!list.length) {
+            if (!list.length && allContacts.length > 0) {
                 tbody.innerHTML = `<tr class="no-data-row"><td colspan="9">
-          ${q ? '🔍 No results for "' + q + '"' : '📭 No contacts yet. Go to listings and click "Contact Owner" to get started!'}
-        </td></tr>`;
+                    🔍 No results for "${q}"
+                </td></tr>`;
+                return;
+            } else if (!list.length) {
+                tbody.innerHTML = `<tr class="no-data-row"><td colspan="9">
+                    📭 No contacts yet. Go to listings and click "Contact Owner" to get started!
+                </td></tr>`;
                 return;
             }
 
@@ -200,29 +243,43 @@
                 const title = (c.propertyTitle || '').length > 30 ? c.propertyTitle.slice(0, 30) + '…' : c.propertyTitle || '—';
 
                 return `<tr>
-          <td><strong>${i + 1}</strong></td>
-          <td><strong>${escHtml(c.name)}</strong></td>
-          <td>+91 ${escHtml(c.phone)}</td>
-          <td>${escHtml(c.email || '—')}</td>
-          <td title="${escHtml(c.propertyTitle || '')}">${title}</td>
-          <td><span class="otp-code">${c.otp}</span></td>
-          <td>${mode}</td>
-          <td>${status}</td>
-          <td style="color:var(--muted);font-size:0.75rem">${timeStr}</td>
-        </tr>`;
+                    <td><strong>${i + 1}</strong></td>
+                    <td><strong>${escHtml(c.name)}</strong></td>
+                    <td>+91 ${escHtml(c.phone)}</td>
+                    <td>${escHtml(c.email || '—')}</td>
+                    <td title="${escHtml(c.propertyTitle || '')}">${title}</td>
+                    <td><span class="otp-code">${c.otp || '—'}</span></td>
+                    <td>${mode}</td>
+                    <td>${status}</td>
+                    <td style="color:var(--muted);font-size:0.75rem">${timeStr}</td>
+                </tr>`;
             }).join('');
         }
 
         function escHtml(str) {
-            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         }
 
-        function clearContacts() {
-            if (!confirm('Delete all contact records? This cannot be undone.')) return;
-            localStorage.removeItem(DB_KEY);
-            allContacts = [];
-            updateStats();
-            renderTable();
+        async function clearContacts() {
+            if (!confirm('Delete all contact records from Supabase? This cannot be undone.')) return;
+
+            try {
+                const resp = await fetch(`${SUPABASE_URL}/rest/v1/contacts?id=neq.00000000-0000-0000-0000-000000000000`, {
+                    method: 'DELETE',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+
+                if (!resp.ok) throw new Error('Delete failed');
+
+                allContacts = [];
+                updateStats();
+                renderTable();
+            } catch (err) {
+                alert('❌ Error clearing contacts: ' + err.message);
+            }
         }
 
         function exportCSV() {
@@ -230,7 +287,7 @@
             const header = ['#', 'Name', 'Phone', 'Email', 'Property', 'OTP', 'Mode', 'Verified', 'Timestamp'];
             const rows = allContacts.map((c, i) => [
                 i + 1, c.name, '+91' + c.phone, c.email || '', c.propertyTitle || '',
-                c.otp, c.mode, c.verified ? 'Yes' : 'No', c.timestamp
+                c.otp || '', c.mode, c.verified ? 'Yes' : 'No', c.timestamp
             ]);
             const csv = [header, ...rows].map(r => r.map(f => `"${String(f).replace(/"/g, '""')}"`).join(',')).join('\n');
             const blob = new Blob([csv], { type: 'text/csv' });
@@ -240,7 +297,7 @@
             URL.revokeObjectURL(url);
         }
 
-        // Auto-refresh when page becomes visible (user switches back from listings)
+        // Auto-refresh when page becomes visible
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) loadContacts();
         });

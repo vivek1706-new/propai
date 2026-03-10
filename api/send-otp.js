@@ -94,6 +94,47 @@ function sendEmail(apiKey, to, subject, html) {
   });
 }
 
+// Function to call Supabase REST API via https
+function insertContact(supabaseUrl, supabaseAnonKey, contactData) {
+  return new Promise((resolve, reject) => {
+    const body = JSON.stringify(contactData);
+    const url = new URL(supabaseUrl);
+    const options = {
+      hostname: url.hostname,
+      path: '/rest/v1/contacts',
+      method: 'POST',
+      headers: {
+        'apikey': supabaseAnonKey,
+        'Authorization': 'Bearer ' + supabaseAnonKey,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation', // To get the inserted row back
+        'Content-Length': Buffer.byteLength(body)
+      }
+    };
+
+    const req = https.request(options, (resp) => {
+      let data = '';
+      resp.on('data', chunk => data += chunk);
+      resp.on('end', () => {
+        if (resp.statusCode >= 200 && resp.statusCode < 300) {
+          try {
+            const records = JSON.parse(data);
+            resolve(records[0]); // Return the first record (inserted row)
+          } catch (e) {
+            reject(new Error('Failed to parse Supabase response: ' + data));
+          }
+        } else {
+          reject(new Error(`Supabase API ${resp.statusCode}: ${data}`));
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+  });
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -103,7 +144,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { name, email, phone, propertyTitle } = req.body || {};
+    const { name, email, phone, propertyId, propertyTitle, mode } = req.body || {};
 
     if (!name || !email || !phone) {
       return res.status(400).json({ error: 'Missing required fields: name, email, phone' });
@@ -114,15 +155,38 @@ export default async function handler(req, res) {
 
     const RESEND_API_KEY = process.env.RESEND_API_KEY;
     if (!RESEND_API_KEY) {
-      return res.status(500).json({ error: 'Email service not configured. Please set RESEND_API_KEY in Vercel environment variables.' });
+      return res.status(500).json({ error: 'Email service not configured. Please set RESEND_API_KEY.' });
+    }
+
+    const SUPABASE_URL = process.env.SUPABASE_URL;
+    const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      return res.status(500).json({ error: 'Supabase service not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY.' });
     }
 
     const otp = generateOTP();
     const token = signToken(email, otp);
 
+    // Call Resend (Send Email)
     await sendEmail(RESEND_API_KEY, email, `${otp} is your NestFinder verification code`, buildEmailHTML(name, otp, propertyTitle));
 
-    return res.status(200).json({ token, message: 'OTP sent successfully' });
+    // Call Supabase (Insert Contact)
+    const record = await insertContact(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      name,
+      phone,
+      email,
+      property_id: propertyId,
+      property_title: propertyTitle,
+      otp: otp, // Storing for trace (optional, user asked for it)
+      mode: mode || 'contact',
+      verified: false
+    });
+
+    return res.status(200).json({
+      token,
+      recordId: record ? record.id : null,
+      message: 'OTP sent and contact initiated'
+    });
 
   } catch (err) {
     console.error('send-otp error:', err);

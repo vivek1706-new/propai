@@ -429,6 +429,7 @@ let _mode = null;  // 'phone' or 'contact'
 let _otpToken = null;  // signed token returned by /api/send-otp (OTP never in client)
 let _buyerData = {};    // collected form data
 let _dbRecord = null;  // saved localStorage record (pre-verified)
+let _recordId = null;  // Supabase UUID for current enquiry record
 
 // ── Init modal once ───────────────────────────────────────────────────────────
 function initModal() {
@@ -503,7 +504,12 @@ async function submitForm() {
     const resp = await fetch('/api/send-otp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, phone, propertyTitle: _prop.title })
+      body: JSON.stringify({
+        name, email, phone,
+        propertyId: _prop.id,
+        propertyTitle: _prop.title,
+        mode: _mode
+      })
     });
 
     let data;
@@ -517,8 +523,9 @@ async function submitForm() {
 
     if (!resp.ok) throw new Error(data.error || 'Failed to send OTP');
 
-    // Store signed token (OTP is inside, never exposed to browser)
+    // Store signed token and recordId
     _otpToken = data.token;
+    _recordId = data.recordId;
 
     // Save attempt to localStorage as pending (OTP not known client-side — store placeholder)
     _dbRecord = dbSaveContact({
@@ -578,6 +585,7 @@ async function resendOtp() {
     const data = await resp.json();
     if (!resp.ok) throw new Error(data.error || 'Resend failed');
     _otpToken = data.token;
+    _recordId = data.recordId;
     showToast('✅ OTP resent to ' + _buyerData.email);
     document.querySelector('.otp-box').focus();
   } catch (err) {
@@ -598,7 +606,7 @@ async function verifyOtp() {
     const resp = await fetch('/api/verify-otp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: _otpToken, enteredOtp: entered })
+      body: JSON.stringify({ token: _otpToken, enteredOtp: entered, recordId: _recordId })
     });
     const data = await resp.json();
 
