@@ -60,7 +60,7 @@ ${propertyTitle ? `view contact details for <strong>${escHtml(propertyTitle)}</s
 function sendEmail(apiKey, to, subject, html) {
   return new Promise((resolve, reject) => {
     const body = JSON.stringify({
-      from: process.env.FROM_EMAIL || 'NestFinder <onboarding@resend.dev>',
+      from: process.env.FROM_EMAIL || 'onboarding@resend.dev',
       to: [to],
       subject: subject,
       html: html
