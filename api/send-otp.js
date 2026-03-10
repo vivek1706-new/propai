@@ -174,8 +174,6 @@ export default async function handler(req, res) {
       email,
       property_id: propertyId,
       property_title: propertyTitle,
-      city: city,
-      locality: locality,
       otp: otp,
       mode: mode || 'contact',
       verified: false
